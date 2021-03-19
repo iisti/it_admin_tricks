@@ -15,9 +15,12 @@ ws.run "wsl.exe -d Debian -u root service cron start; echo 'Do not close this wi
 ~~~
 sudo apt-get update; \
 sudo apt-get -y upgrade; \
-sudo apt-get install -y tmux wget vim; \
+sudo apt-get install -y ssh tmux wget vim; \
 cd && \
-wget https://gist.githubusercontent.com/iisti/bf7769f0eaa8e863e7cb0dd324b6dcf5/raw/ed4169aa875a73013ada73f71b9f8f577c2cb981/.vimrc ; \
+wget https://gist.githubusercontent.com/simonista/8703722/raw/d08f2b4dc10452b97d3ca15386e9eed457a53c61/.vimrc && \
+sed -i 's/^set tabstop=2/set tabstop=4/' .vimrc && \
+sed -i 's/^set shiftwidth=2/set shiftwidth=4/' .vimrc && \
+sed -i 's/^set softtabstop=2/set softtabstop=4/' .vimrc; \
 sudo sed -i 's/# set bell-style none/set bell-style none/' /etc/inputrc; \
 printf "\n# Stop bell sounds\nexport LESS=\"$LESS -R -Q\"" >> ~/.profile; \
 sudo chmod u+s /bin/ping
@@ -34,8 +37,7 @@ ping: socket: Operation not permitted
 `sudo chmod u+s /bin/ping`
 
 ## vimrc
-* https://gist.githubusercontent.com/iisti/bf7769f0eaa8e863e7cb0dd324b6dcf5/raw/ed4169aa875a73013ada73f71b9f8f577c2cb981/.vimrc
-  * The above is fork from this https://gist.github.com/simonista/8703722
+* https://gist.github.com/simonista/8703722
 
 ## Disable bell
 * Source
@@ -56,3 +58,9 @@ printf "\n\" Stop bell sounds\nset visualbell\n" >> ~/.vimrc
 ## Tmux tips
 * Copying without hassle, press SHIFT and select with mouse.
  * Source: https://www.rushiagr.com/blog/2016/06/16/everything-you-need-to-know-about-tmux-copy-pasting-ubuntu/
+
+## Mount NFS 4.1 with WSL2
+~~~
+mkdir /mnt/nfs-backups
+mount -t nfs4 'server.domain.com:/nfs-share' /mnt/nfs-backups
+~~~
