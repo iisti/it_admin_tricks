@@ -17,3 +17,10 @@
    1. Select Window and Hide or show cursor.
 1. Set the Audio levels that volume does not go to red (this would mean that the sound gets distorted).
 1. click Start Recording.
+
+### MacOS recording internal audio
+* With Big Sur 11.1 it was possible to record internal browser audio from Chrome with these instructions
+  * https://obsproject.com/forum/resources/os-x-capture-audio-with-ishowu-audio-capture.505/
+* *Desktop audio on Mac currently requires a second program to help OBS capture it, since macOS does not provide a way to capture audio built-in. You can accomplish this with a program called iShowU.*
+  * iShowU https://support.shinywhitebox.com/hc/en-us/articles/204161459-Installing-iShowU-Audio-Capture
+  * Source https://obsproject.com/forum/threads/how-to-capture-desktop-audio-on-mac.16491/
