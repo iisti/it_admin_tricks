@@ -214,3 +214,12 @@ user@daisy-control:~$ daisy -var:source_image=projects/project-for-migrating-vms
 
 ## Create VM with the newly created image
 * If there's an Microsoft Active Directory in the GCP, set "static" DHCP IP and change DNS IP from the VM OS to point the AD DC.
+
+## Some tips
+~~~
+# List buckets
+gsutil ls
+
+# List bucket contents, use -r if all files should be listed.
+gsutil ls gs://BUCKET_NAME/**
+~~~

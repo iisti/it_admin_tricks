@@ -14,6 +14,7 @@
     ~~~
 1. Put the ESXi into maintenance mode or shutdown all VMs
 1. Run update with the *Image Profile Name* which can be found in *Build Number* page, in this case *ESXi-6.7.0-20200403001-standard*
+    * If you're running old hardware, add parameter `--no-hardware-warning` to the command below, so that the installation goes through.
     ~~~
     esxcli software profile update -p ESXi-6.7.0-20200403001-standard -d /vmfs/volumes/datastore1/ESXi670-202004001.zip
 
