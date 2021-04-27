@@ -28,4 +28,4 @@
           Check, Label incoming messages: <whatever one chooses>
           Uncheck, Archive incoming messages (Skip the Inbox)
           ~~~
-    * There will be a question if you want to be able to send as *test.user@domain.com*. You can select no, if the account is just beign migrated.
+    * There will be a question if you want to be able to send as *test.user@domain.com*. You can select no, if the account is just being migrated.
