@@ -10,8 +10,9 @@
 1. On ***source*** account test.user@domain.com turn on these settings on the account.
     * Gmail -> Settings -> Forwading and POP/IMAP
         * **Enable POP for all mail**, check that keep copy is selected.
-    * Manage your Google Account -> Security -> There should be section to enable **Less secure app access**. If one is using 2FA, an App password needs to be created.
-        * Enable **Less secure app access**
+    * Manage your Google Account Security https://myaccount.google.com/security
+        * There should be section to enable **Less secure app access**. If one is using 2FA, an App password needs to be created.
+          * Enable **Less secure app access**
 1. On ***destination*** account
     * ***Gmail settings*** -> ***Accounts*** -> ***Check mail from other accounts***, Add a mail account
         * Settings:
