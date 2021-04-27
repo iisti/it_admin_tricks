@@ -7,18 +7,18 @@
   * https://support.google.com/mail/answer/7104828?hl=en
 
 ## Migrating emails
-1. On ***source*** account test.user@domain.com turn on these settings on the account.
+1. On **SOURCE** account test.user@domain.com turn on these settings on the account.
     * Gmail -> Settings -> Forwading and POP/IMAP
         * **Enable POP for all mail**, check that keep copy is selected.
     * Manage your Google Account Security https://myaccount.google.com/security
         * There should be section to enable **Less secure app access**. If one is using 2FA, an App password needs to be created.
           * Enable **Less secure app access**
-1. On ***destination*** account
-    * ***Gmail settings*** -> ***Accounts*** -> ***Check mail from other accounts***, Add a mail account
+1. On **DESTINAION** account destination.user@anotherdomain.com
+    * **Gmail settings** -> **Accounts** -> **Check mail from other accounts**, Add a mail account
         * Settings:
           ~~~
           Email address: test.user@domain.com
-          Username: test.user
+          Username: test.user@domain.com
           Password: xxx
           POP Server: pop.gmail.com
           Port: 995
@@ -28,3 +28,4 @@
           Check, Label incoming messages: <whatever one chooses>
           Uncheck, Archive incoming messages (Skip the Inbox)
           ~~~
+    * There will be a question if you want to be able to send as *test.user@domain.com*. You can select no, if the account is just beign migrated.
