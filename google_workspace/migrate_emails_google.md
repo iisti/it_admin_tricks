@@ -29,3 +29,7 @@
           Uncheck, Archive incoming messages (Skip the Inbox)
           ~~~
     * There will be a question if you want to be able to send as *test.user@domain.com*. You can select no, if the account is just being migrated.
+1. One can check on DESTIONATION account from **Gmail settings** -> **Accounts** -> **Check mail from other accounts** that the added account is showing.
+    * The status should be something like:
+        * Checking emails...
+        * Last checked: 2 minutes ago. No mails fetched. View history Check mail now  
