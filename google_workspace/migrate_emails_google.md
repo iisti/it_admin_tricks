@@ -13,7 +13,7 @@
     * Manage your Google Account Security https://myaccount.google.com/security
         * There should be section to enable **Less secure app access**. If one is using 2FA, an App password needs to be created.
           * Enable **Less secure app access**
-1. On **DESTINAION** account destination.user@anotherdomain.com
+1. On **DESTINATION** account destination.user@anotherdomain.com
     * **Gmail settings** -> **Accounts** -> **Check mail from other accounts**, Add a mail account
         * Settings:
           ~~~
