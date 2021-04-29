@@ -134,6 +134,10 @@
          <IfModule mod_autoindex.c>
             IndexOptions NameWidth=*
          </ifModule>
+         
+         # For creating a header for the page.
+         HeaderName /header.html
+         IndexIgnore header.html
        </Directory>
 
        <Location "/">
@@ -168,4 +172,5 @@
       ~~~
       killall -9 httpd ; rm /data/data/com.termux/files/usr/var/run/apache2/httpd.pid ; apachectl -k start
       ~~~
-3. In browser you shold see "test" at http://IP_of_phone:8080
+1. In browser you shold see "test" at http://IP_of_phone:8080
+1. Remove index.html and create header.html. All the new sms files should be listed below header content.
