@@ -60,3 +60,91 @@
       * Enter text: [sms_message]
       * Append to file
    * Constraints - none
+1. Now any 
+
+## Publish SMS via Apache2
+
+### Install Apache2
+* Source https://medium.com/@huffypiet/how-i-set-up-apache2-web-server-with-termux-on-android-2d7e31aac63e
+1. Install package and start
+    ~~~
+    pkg install apache2
+    apachectl start
+    ~~~
+1. Go with browser http://IP:8080/ and you should see "It works!" or some other default page.
+    * Default page is located in /data/data/com.termux/files/usr/share/apache2/default-site/htdocs
+1. Create Debian like sites-available and sites-enabled structure if it doesn't exist.
+    * This is just to make life a bit easier with test/prod confs.
+    * Check if they exist already
+        ~~~
+        ls -la /data/data/com.termux/files/usr/etc/apache2/
+        ~~~
+    * If they don't exist create them
+        ~~~
+        mkdir /data/data/com.termux/files/usr/etc/apache2/sites-available
+        mkdir /data/data/com.termux/files/usr/etc/apache2/sites-enabled
+        ~~~
+1. If the sites-* folders didn't exist, add configuration below to Apache main configuration file.
+    * This enables that the configuration files in sites-enabled are loaded.
+    * There's also some added security.
+        ~~~
+        cp /data/data/com.termux/files/usr/etc/apache2/httpd.conf /data/data/com.termux/files/usr/etc/apache2/httpd.conf.orig; \
+        cat <<EOF >> /data/data/com.termux/files/usr/etc/apache2/httpd.conf
+
+        # For Debian style sites-available and sites-enabled
+        IncludeOptional /data/data/com.termux/files/usr/etc/apache2/sites-enabled/*.conf
+
+        # Additional security
+        # Source:
+        # https://www.systemcodegeeks.com/web-servers/apache/apache-configuration-tutorial/
+        ServerSignature Off
+        ServerTokens Prod
+        EOF
+        ~~~
+
+1. Configure httpd.conf
+    * Replace pattern example https://stackoverflow.com/questions/11659970/finding-and-replacing-lines-that-begin-with-a-pattern
+    ~~~
+    sed -i 's/^#ServerName.*$/ServerName localhost/' /data/data/com.termux/files/usr/etc/apache2/httpd.conf
+    ~~~
+1. Create new webroot for the site and a test page
+    ~~~
+    # Create webroot
+    mkdir /data/data/com.termux/files/home/storage/shared/Android/data/com.termux/files/sms
+    # Create test index.html
+    echo "test" >> /data/data/com.termux/files/home/storage/shared/Android/data/com.termux/files/sms/index.html
+    ~~~
+1. Create test page configuration for Apache
+    * cat /data/data/com.termux/files/usr/etc/apache2/sites-available/sms.domain.com.conf
+    ~~~
+    <VirtualHost *:8080>
+       ServerName sms.domain.com
+       ServerAdmin email@domain.com
+       DocumentRoot /data/data/com.termux/files/home/storage/shared/Android/data/com.termux/files/sms
+
+       <Directory "/data/data/com.termux/files/home/storage/shared/Android/data/com.termux/files/sms" >
+           Options Indexes FollowSymlinks
+           AllowOverride None
+           Require all granted
+       </Directory>
+
+       <Location "/">
+           # Restrict to certain IP or network
+           Require ip 192.168.3.30
+           Require ip 192.168.2.1/24
+       </Location>
+
+       # Default error log is in
+       # /data/data/com.termux/files/usr/var/log/apache2/error_log
+    </VirtualHost>
+    ~~~
+1. Enable the site
+    ~~~
+    cd /data/data/com.termux/files/usr/etc/apache2/sites-enabled
+    ln -s ../sites-available/mobile-sms.domain.com.conf .
+    ~~~
+1. Run config test and reload configuration
+    ~~~
+    apachectl configtest
+    ~~~
+3. In browser you shold see "test" at http://IP_of_phone:8080
