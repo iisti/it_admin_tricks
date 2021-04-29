@@ -45,4 +45,18 @@
     /data/data/com.termux/files/usr/etc/ssh
     ~~~
 
-### 
+### Copy SMS to Termux storage when the SMS arrives with MacroDroid app
+* Termux doesn't have access to SMS' by default, so the messages need to be copied into Termux storage before they can be read.
+* This tutorial uses MacroDroid for automating the copying.
+   * https://play.google.com/store/apps/details?id=com.arlosoft.macrodroid&hl=en&gl=US
+1. Install and open MacroDroid
+1. Add Macro
+   * Trigger
+      * SMS from *
+      * Any Content
+   * Actions
+      * Files -> Write to File /storage/emulated/0/Android/data/com.termux/files/sms
+      * filename: [year][month_digit][dayofmonth]-[hour][minute][second]__[sms_number]
+      * Enter text: [sms_message]
+      * Append to file
+   * Constraints - none
