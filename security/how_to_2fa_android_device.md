@@ -149,6 +149,8 @@
        # Default error log is in
        # /data/data/com.termux/files/usr/var/log/apache2/error_log
     </VirtualHost>
+    
+    # vim: filetype=apache expandtab ts=4 sw=4
     ~~~
 1. Enable the site
     ~~~
