@@ -126,6 +126,14 @@
            Options Indexes FollowSymlinks
            AllowOverride None
            Require all granted
+           
+           # Ä and Ö
+           IndexOptions +Charset=UTF-8
+          
+         # Show full file names
+         <IfModule mod_autoindex.c>
+            IndexOptions NameWidth=*
+         </ifModule>
        </Directory>
 
        <Location "/">
@@ -143,8 +151,21 @@
     cd /data/data/com.termux/files/usr/etc/apache2/sites-enabled
     ln -s ../sites-available/mobile-sms.domain.com.conf .
     ~~~
-1. Run config test and reload configuration
+1. Run configuration test 
     ~~~
     apachectl configtest
     ~~~
+1. Restart Apache2 to load configuration
+   * apachectl stop can cause error:
+      ~~~
+      $ apachectl stop
+      (20014)Internal error (specific information not available): AH00058: Error retrieving pid file var/run/apache2/httpd.pid
+      AH00059: Remove it before continuing if it is corrupted.
+      ~~~
+
+   * Solution is to kill httpd/apache2 process, remove httpd.pid and start httpd/apache2
+      * Command in oneliner to restart/start Apache is:
+      ~~~
+      killall -9 httpd ; rm /data/data/com.termux/files/usr/var/run/apache2/httpd.pid ; apachectl -k start
+      ~~~
 3. In browser you shold see "test" at http://IP_of_phone:8080
