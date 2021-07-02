@@ -13,7 +13,7 @@
     * Manage your Google Account Security https://myaccount.google.com/security
         * There should be section to enable **Less secure app access**. If one is using 2FA, an App password needs to be created.
           * Enable **Less secure app access**
-          * The feature needs to be enabled by Google Workspace admin in https://admin.google.com/ac/security/lsa before shows for the email user.
+          * The feature needs to be enabled by Google Workspace admin in https://admin.google.com/ac/security/lsa before the section shows for the email user.
 1. On **DESTINATION** account destination.user@anotherdomain.com
     * **Gmail settings** -> **Accounts** -> **Check mail from other accounts**, Add a mail account
         * Settings:
