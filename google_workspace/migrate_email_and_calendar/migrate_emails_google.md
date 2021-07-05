@@ -44,23 +44,24 @@
         ![Configure the settings above](./images/email/email-008-destination-add-source-account-2.png)
     * There will be a question if you want to be able to send as *source.user@sourcedomain.com*. You can select no, if you don't need to send emails via the source user.  
         ![Send emails?](./images/email/email-009-destination-send-email-as-1.png)
-    1. If you selected, YES, for sending emails:
+    1. **(Send emails as)**: If you selected, YES, for sending emails:
         * Add sender name.
         * Select Treat as an alias.  
         ![Add sender name](./images/email/email-010-destination-send-email-as-2.png)
-    1. Configure source SMTP server settings
+    1. **(Send emails as)**: Configure source SMTP server settings
         * Google's SMTP server: smtp.gmail.com
         * Port (TLS): 587
         * Check: Secured connection using TLS  
         ![Configure SMTP](./images/email/email-011-destination-send-email-as-3.png)
-    1. Check your email for verification code and copy-paste it into the input
+    1. **(Send emails as)**: Check your email for verification code and copy-paste it into the input
        field.  
         ![Check verification code](./images/email/email-012-destination-send-email-as.png)
         * The verification code email looks like this  
             ![Verification email](./images/email/email-013-destination-send-email-as-code.png)
-1. Everythign should be ready check the **Gmail Settings** -> **Accounts**.
-    * **Check mail from the other accounts** should be something like:
+1. Everything should be ready, check the **Gmail Settings** -> **Accounts**.
+    * **Check mail from the other accounts** should show something like:
         * Checking emails...
+        * OR
         * Last checked: 2 minutes ago. No mails fetched. View history Check mail now  
         ![Settings after configuration](./images/email/email-014-destination-new-user-added.png)
             * Of course if the **Send email as** wasn't configured, there's no change from before.
