@@ -29,3 +29,8 @@
     ![Imported events notification](./images/calendar/calendar-009-destination-imported-events.png)
 1. Events should show up in the destination user's calendar
     ![Events show up](./images/calendar/calendar-010-destination-event-shows-up.png)
+
+## Automatically decline meetings
+* Additionally one can create an automatic decliner for the source user for new
+  meetings and add a message to invite the destination user instead.  
+    ![Automatically decline](./images/calendar/calendar-011-calendar-souce-create-automatic-decline-with-message-informing-about-the-new-email.png)
