@@ -1,0 +1,4 @@
+output/*
+!output/.gitignore
+*.conf
+!template_config.conf

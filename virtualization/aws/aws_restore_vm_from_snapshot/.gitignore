@@ -1,0 +1,11 @@
+*.swp
+*.json
+!iam_policy_example.json
+logs/*
+!logs/.gitignore
+output/*
+!output/.gitignore
+*.conf
+!config_example.conf
+*.pid
+test_files_not_in_git/*

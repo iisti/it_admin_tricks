@@ -1,0 +1,16 @@
+token
+github_*_members.txt
+git-copy-repos/repos/*
+!git-copy-repos/repos/.gitignore
+*.swp
+*.json
+logs/*
+!logs/.gitignore
+output/*
+!output/.gitignore
+*.conf*
+!config_example.conf
+!template.config.conf
+*.pid
+test_files_not_in_git/*
+backups/*
