@@ -16,6 +16,18 @@
     wsl --install -d Debian
     ~~~
 
+* Check version
+    ~~~
+    wsl --version
+    WSL-versio: 2.0.9.0
+    Ytimen versio: 5.15.133.1-1
+    WSLg-versio: 1.0.59
+    MSRDC-versio: 1.2.4677
+    Direct3D-versio: 1.611.1-81528511
+    DXCore-versio: 10.0.25131.1002-220531-1700.rs-onecore-base2-hyp
+    Windows-versio: 10.0.22631.3007
+    ~~~
+
 ## New installation Debian/Ubuntu
 * Upgrade, install, set vim config, disable bell
 ~~~

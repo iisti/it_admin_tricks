@@ -117,6 +117,42 @@
     </VirtualHost>
     ~~~
 
+## SELinux contexts
+
+There was an issue when moving sftp data from disk to another that after moving Apache showed error below when browsing to user's files.
+
+> Forbidden
+> 
+> You don't have permission to access this resource.Server unable to read htaccess file, denying access to be safe
+
+* File SELinux Contexts were checked
+
+   ~~~
+   # Old context 
+   ls -Z /opt/disk02/sftp_files/asdf/.htaccess
+   unconfined_u:object_r:usr_t:s0 /opt/disk02/sftp_files/asdf/.htaccess
+   
+   # New context
+   ls -Z /mnt/disk03/sftp_files/asdf/.htaccess
+   unconfined_u:object_r:unlabeled_t:s0 /mnt/disk03/sftp_files/asdf/.htaccess
+   ~~~
+
+* The contexts were fixed with command below
+
+   ~~~
+   # Variables
+   usr="asdf"; path="/mnt/disk03/sftp_files/"
+   
+   # Test that SELinux Context works
+   chcon -R -t usr_t "path""usr"
+   
+   # Change the contexts permanently
+   semanage fcontext -a -t usr_t "$path""$usr""(/.*)?" && \
+   restorecon -R -v "$path""$usr"
+
+   # "(/.*)?" means that the contexts need to be changed recursively.
+   ~~~
+
 ## Configure NFS storage (optional)
 * With NFS permission inheritance doesn't work the same way as local disks/files, so the default ACL settings must be set on NFS server.
 * For clarity create `sftpusers` group in NFS server with same GID as in the SFTP server.

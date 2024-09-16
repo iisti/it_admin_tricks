@@ -1,6 +1,12 @@
-# Install Windows 10 with USB stick
+# Windows Desktop Instructions
 
-## Create installation media for Windows
+## Windows 11 disable Activity history
+
+Settings -> Privacy & Security -> Activity history -> Disable Store my activity history on this device.``
+
+## Install Windows 10 with USB stick
+
+### Create installation media for Windows
 * Windows: Create USB installation media - Windows 10, 64-bit, English
     * Rufus is great!
 * Mac: Create a USB installation Media with Mac in terminal
@@ -30,14 +36,14 @@
   Retail
   ~~~
 
-## Create unattended installation media for Win10
+### Create unattended installation media for Win10
 * ADK download for Windows 10
    * Install only Deployment Tools ~100MB
    * https://support.microsoft.com/en-us/windows/adk-download-for-windows-10-2a0b7ff2-79b7-b989-f727-43ae506e36ad
 
 * Source of instructions: https://www.windowscentral.com/how-create-unattended-media-do-automated-installation-windows-10
 
-### Check available versions in admin PowerShell
+#### Check available versions in admin PowerShell
 ~~~
 # A variable for storing path into the Windows sources directory  
 $path_win_sources="C:\Users\iisti\Documents\win10_21h1\sources"
@@ -93,7 +99,7 @@ dism /Export-Image /SourceImageFile:$path_win_sources\install.esd /SourceIndex:6
 
 * One can check information of the customizations from this link https://docs.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/
 
-### Customize the installation image
+#### Customize the installation image
 1. Open Windows System Image Manager
     * Make sure you're using correct architecture amd64 and not wow64!
         * At least in these instructions there's no need for wow64 = 32 bit component for 64 bit OS.
@@ -383,7 +389,7 @@ dism /Export-Image /SourceImageFile:$path_win_sources\install.esd /SourceIndex:6
    At line:1 char:1
    + test-computersecurechannel
    + ~~~~~~~~~~~~~~~~~~~~~~~~~~
-       + CategoryInfo          : InvalidOperation: (COMPUTERNAME:String) [Test-ComputerSecureChannel], InvalidOperationException
+       + CategoryInfo          : InvalidOperation: (computer71:String) [Test-ComputerSecureChannel], InvalidOperationException
        + FullyQualifiedErrorId : ComputerNotInDomain,Microsoft.PowerShell.Commands.TestComputerSecureChannelCommand
    ~~~
 ## Check computer domain

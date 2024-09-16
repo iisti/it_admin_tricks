@@ -1,0 +1,7 @@
+input/*
+output/*
+*.conf
+!exclude_template.conf
+!template_config.conf
+!template_config_tar.conf
+!template_config_untar.conf

@@ -1,26 +1,38 @@
 # How to install, configure and use PrivateBin
 
 * PrivateBin is a service for sending sensitive data over browser links
-* https://nxnjz.net/2019/02/how-to-install-privatebin-on-debian-9/
 
-## Installation on Linux
+## Install/Upgrade on Linux
   ~~~
-  cd /var/www/html/ && sudo git clone https://github.com/PrivateBin/PrivateBin.git
-  sudo chown -R www-data:www-data PrivateBin/
-  ~~~
+  # Variables
+  pbin_folder="/var/www/privatebin.domain.com"
 
-## Upgrade on Linux
-  * Nothing should happen to the existing encypted messages.
-  * Check for update
-      ~~~
-      cd /var/www/html/PrivateBin
-      git remote update
-      git status
-      ~~~
-  * Upgrade
-      ~~~
-      git pull
-      ~~~
+  download_url_latest="https://api.github.com/repos/PrivateBin/PrivateBin/releases/latest"
+  download_folder="/tmp/"
+  download_file="privatebin_latest.tar.gz"
+  date_folder="$(date '+%Y%m%d')"
+  
+  # Move the old PrivateBin installation
+  mv "$pbin_folder" "$pbin_folder"_old_"$date_folder"
+  
+  # Download the newest PrivateBin installation
+  tarball_url="$(wget -q -O - "$download_url_latest" | jq -r '.tarball_url')"
+  wget "$tarball_url" -q -O "$output_folder""$download_file"
+  
+  # Extract the tarball
+  tar -zxvf "$output_folder""$download_file" -C "$output_folder"
+  
+  # Check the name of the extracted folder and move it to installation path
+  wrong_folder_name="$(tar --exclude="*/*" -tf "$output_folder""$download_file")"
+  mv "$output_folder""$wrong_folder_name" "$pbin_folder"
+  
+  # Create data folder and copy old data into it
+  mkdir "$pbin_folder"/data
+  cp -r "$pbin_folder"_old_"$date_folder"/data "$pbin_folder"/
+  chown -R www-data:www-data "$pbin_folder"/data
+  
+  rm "$output_folder""$download_file"
+  ~~~
 
 ## Configuration on Debian/Ubuntu
 
@@ -30,10 +42,10 @@
 
   <VirtualHost *:80>
       ServerName pbin
-      DocumentRoot /var/www/html/PrivateBin/
+      DocumentRoot /var/www/privatebin.domain.com/
       ErrorLog ${APACHE_LOG_DIR}/privatebin-error.log
       CustomLog ${APACHE_LOG_DIR}/privatebin-access.log combined
-      <Directory /var/www/html/PrivateBin>
+      <Directory "/var/www/privatebin.domain.com">
           AllowOverride All
       </Directory>
   </VirtualHost>

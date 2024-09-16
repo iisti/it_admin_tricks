@@ -33,8 +33,8 @@ sudo python3 aws-replication-installer-init.py
     ~~~
     * Fix
       ~~~ 
-      aws ec2 --profile=profile_name modify-instance-attribute --instance-id i-0a8d8b5d1b8b9xxxx --ena-support
-      aws ec2 --profile=profile_name describe-instances --instance-id i-0a8d8b5d1b8b9xxxx --query "Reservations[].Instances[].EnaSupport"
+      aws ec2 --profile=PROFILE modify-instance-attribute --instance-id i-0a8d8b5d1b8b9xxxx --ena-support
+      aws ec2 --profile=PROFILE describe-instances --instance-id i-0a8d8b5d1b8b9xxxx --query "Reservations[].Instances[].EnaSupport"
           [
           true
           ]

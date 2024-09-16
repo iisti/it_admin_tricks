@@ -1,6 +1,7 @@
 # Basic installation/configuration of Debian server/desktop
 
 ## Installation with VMware ESXi
+
 1. Download ISO
     * https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/
     * Check shasum
@@ -12,32 +13,39 @@
     * standard system utilities
 
 ## Install sudo and add user to sudoers group
-~~~
+
+~~~sh
 su -
 apt-get install sudo
 usermod -aG sudo username
 exit
 ~~~
+
 * Login/logout with the user username, so that current groups are updated.
 
 ## Run script to install some basic software
-~~~
+
+~~~sh
 sudo apt-get update; \
 sudo apt-get -y upgrade; \
 sudo apt-get install -y ssh rsync tmux wget vim git unzip; \
 cd && \
-wget https://gist.githubusercontent.com/iisti/bf7769f0eaa8e863e7cb0dd324b6dcf5/raw/ed4169aa875a73013ada73f71b9f8f577c2cb981/.vimrc && \
+wget https://gist.githubusercontent.com/iisti/bf7769f0eaa8e863e7cb0dd324b6dcf5/raw/5e0b1af416bcaedf572b9bc9702419a17cd91a88/.vimrc && \
 sed -i 's/^set tabstop=2/set tabstop=4/' .vimrc && \
 sed -i 's/^set shiftwidth=2/set shiftwidth=4/' .vimrc && \
 sed -i 's/^set softtabstop=2/set softtabstop=4/' .vimrc && \
 sudo cp ~/.vimrc /root/
-
-# For ESXi
-sudo apt-get install -y open-vm-tools
 ~~~
+
+* For ESXi
+
+   ~~~sh
+   sudo apt-get install -y open-vm-tools
+   ~~~
 
 ## Set locales
-~~~
+
+~~~sh
 sudo dpkg-reconfigure locales
 # Set:
 #   en_US.UTF-8 UTF-8
@@ -47,16 +55,21 @@ sudo dpkg-reconfigure locales
 ~~~
 
 ## Show current folder instead of full path in shell
+
 * Source: https://superuser.com/a/60563/532911
 * Change \w from lowercase to uppercase \W in ~/.bashrc file
-    ~~~
+
+    ~~~sh
     if [ "$color_prompt" = yes ]; then
         PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\W \$\[\033[00m\] '
                                                                                                 ^ This one
     ~~~
+
     * Start new shell.
+
 * Adding the same for root user
-    ~~~
+
+    ~~~sh
     sudo tee -a /root/.bashrc <<'EOF'
 
     ### Added into the default conf
@@ -70,44 +83,53 @@ sudo dpkg-reconfigure locales
     ~~~
     
 ## Add additional user
+
 * This user uses SSH key as authentication. Argument `--disabled-password` can be left out if password is required.
-   ~~~
+
+   ~~~sh
+   # User can create new private and public SSH keys with command below
+   ssh-keygen -t ed25519 -C "your_email@example.com"
+   
    newuser=user_name
+   # If the new user doesn't need sudo, or it's allowed without a password.
    sudo adduser "$newuser" --disabled-password
+
+   # If the nes user needs to run sudo commands, or it's not allowed without a password.
+   sudo adduser "$newuser"
    
    # Add .ssh folder, authorized_keys file and SSH key for authentication
-   sudo su - "$newuser"
-   mkdir .ssh
-   chmod 700 .ssh
-   touch .ssh/authorized_keys
-   chmod 600 .ssh/authorized_keys
+   sudo mkdir /home/"$newuser"/.ssh
+   chmod 700 /home/"$newuser"/.ssh
+   touch /home/"$newuser"/.ssh/authorized_keys
+   chmod 600 /home/"$newuser"/.ssh/authorized_keys
+   chown -R "$newuser". /home/"$newuser"/.ssh
    sshkey_public="ssh-ed25519 xxxxyyyywwww user@email.com"
-   echo "$sshkey_public" | tee -a ~/.ssh/authorized_keys
-   exit
+   echo "$sshkey_public" | sudo tee -a /home/"$newuser"/.ssh/authorized_keys
    
-   # Create a own SSH key
-   ssh-keygen -t ed25519 -C "your_email@example.com"
-
    # Add to sudoers group
    sudo usermod -a -G sudo $newuser
    ~~~
 
 * One can add this to own machine for connecting into the Debian machine.
-   ~~~
+
+   ~~~sh
    ~/.ssh/config
 
    Host <machine_name>
        # Machine name, machine ID i-xxxxx
        Hostname <IP or DNS name>
        User <user_name>
-       IdentityFile ~/.ssh/ssh_key.pem
+       IdentityFile ~/.ssh/private_ssh_key
    ~~~
 
 ## Add extra disk
+
 * This has been tested in AWS with Debian 10.
     * Run as root or sudo
-        ~~~
+
+        ~~~sh
         lsblk
+        # ATTENTION! It's not necessary to make a partition, one can also just format the plain volume, mkfs.xfs /dev/nvme1n1
         fdisk /dev/nvme1n1
         # Choices: n, p, 1, default, default, w
         lsblk
@@ -134,29 +156,36 @@ sudo dpkg-reconfigure locales
         ~~~
 
 ## Install XRDP for Remote Desktop Connection
+
 * Install and configure
-   ~~~
+
+   ~~~sh
    sudo apt-get install xrdp
    # This is for NLA (Network Level Authentication)
    # Otherwise there will be warning of "you're using older version..."
    sudo adduser xrdp ssl-cert
    sudo systemctl restart xrdp
    ~~~
+
 * Firewall might need configuration
-   ~~~
+
+   ~~~sh
    # Allow access from certain IP
    ufw allow from server_ip_addr to any port 3389
 
    # Allow access from everywhere
    ufw allow 3389
    ~~~
+
 * Might need restarting the whole machine
 * Local user must be logged out, so that the RDP connection succeeds.
 
 ## Install Google Drive
+
 * Tested on Debian 11 Desktop
-   * OcalmFuse worked properly, Gnome Online Account didn't
-      ~~~
+   * OcalmFuse worked properly, Gnome Online Account didn't.
+
+      ~~~sh
       sudo apt-get install libfuse-dev libsqlite3-dev
       sudo apt-get install opam -y
       opam init
@@ -181,10 +210,20 @@ sudo dpkg-reconfigure locales
       ~~~
 
 ## Install Docker
+
 * Check [docker_install.md](../docker/docker_install.md)
 
 ## Install Node.js
+
+* Install Node.js with brew
+
+   ~~~sh
+   brew install node
    ~~~
+
+* This most likely install old version of Node.js.
+
+   ~~~sh
    sudo apt-get install nodejs npm; \
    node -v
    ~~~

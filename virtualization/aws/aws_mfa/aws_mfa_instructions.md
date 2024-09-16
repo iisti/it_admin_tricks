@@ -25,7 +25,8 @@ The session token which is retrieved is valid 12 hours.
 1. If you don’t have jq installed, you can install it with apt update && apt install jq in Ubuntu/Debian.
 1. Run the script and give MFA code from your MFA application (probably a phone app).
 1. One can also create an alias for the script in `~/.bashrc`
-    ~~~
+
+    ~~~shell
     # Creating alias for aws_mfa
     alias aws_mfa="<script_path>/aws_mfa_get_token.sh"
     ~~~
@@ -34,7 +35,7 @@ The session token which is retrieved is valid 12 hours.
 1. Create a policy DenyAccessWithoutMFA. Policy is copied from the link below
     * Notice that line "iam:ChangePassword" needs to be added to section "Sid": "BlockMostAccessUnlessSignedInWithMFA", otherwise first time login doesn’t work if user is forced to change password.
 
-    ~~~
+    ~~~json
     {
         "Version": "2012-10-17",
         "Statement": [
@@ -102,8 +103,13 @@ The session token which is retrieved is valid 12 hours.
         ]
     }
     ~~~
+
+    * Notice that even the BoolIfExists is recommended, AWS docs have the following remarks, source https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html
+
+      > This combination of `Deny`, `BoolIfExists`, and `false` denies requests that are not authenticated using MFA. Specifically, it denies requests from temporary credentials that do not include MFA. It also denies requests that are made using long-term credentials, such as AWS CLI or AWS API operations made using access keys. The `*IfExists` operator checks for the presence of the `aws:MultiFactorAuthPresent` key and whether or not it could be present, as indicated by its existence. Use this when you want to deny any request that is not authenticated using MFA. This is more secure, but can break any code or scripts that use access keys to access the AWS CLI or AWS API. 
 1. Create a policy AllowMySecurityCredentialsDetails
-    ~~~
+
+   ~~~json
     {
         "Version": "2012-10-17",
         "Statement": [
@@ -121,6 +127,7 @@ The session token which is retrieved is valid 12 hours.
         ]
     }
     ~~~
+
 1. Create a group require-mfa and attach the policies into that group.
 1. Put users into that group.
     

@@ -51,7 +51,7 @@
 ## PowerShell: local or AD user login information
 * Source: https://mikefrobbins.com/2015/10/01/powershell-filter-by-user-when-querying-the-security-event-log-with-get-winevent-and-the-filterhashtable-parameter/
 * Event IDs
-  * 4614 = logged on
+  * 4624 = logged on
   * 4800 = locked
   * 4801 = unlocked 
 * This one-liner will retrieve logins from current day.

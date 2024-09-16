@@ -2,7 +2,8 @@
 
 ## How to print encrypted SSH key
 * This is required for example pastin unencrypted SSH Key into AWS for retrieving Windows password.
-    * The original key is encrypted OPENSSH key which is copied and converted to temporary PEM/RSA key, and then removed. 
+    * The original key is encrypted OPENSSH key which is copied, printed and converted to temporary PEM/RSA key, and then removed.
+
       ~~~
       key="orig.pem"; cp $key temp.pem && chmod 700 temp.pem && ssh-keygen -p -m pem -f temp.pem && cat temp.pem && rm temp.pem
       ~~~
@@ -20,3 +21,18 @@
                 is “RFC4716”.  Setting a format of “PEM” when generating or updating a supported private key type will
                 cause the key to be stored in the legacy PEM private key format.
          ~~~
+     * Example usage
+         1. Enter passphrase to decrypt.
+         1. One can just hit enter with empty passphrase for a new passphrase, the file is removed right after printing the content to console.
+            ~~~
+            key="orig.pem"; cp $key temp.pem && chmod 700 temp.pem && ssh-keygen -p -m pem -f temp.pem && cat temp.pem && rm temp.pem
+         
+            Enter old passphrase:
+            Key has comment ''
+            Enter new passphrase (empty for no passphrase):
+            Enter same passphrase again:
+            Your identification has been saved with the new passphrase.
+            -----BEGIN RSA PRIVATE KEY-----
+            CENSORED
+            -----END RSA PRIVATE KEY-----
+            ~~~

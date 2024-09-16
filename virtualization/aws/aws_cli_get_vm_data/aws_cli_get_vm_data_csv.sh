@@ -17,22 +17,24 @@ output="./output/"
 # so the parameter needed to be split in 2 variables.
 if [[ -z "$profile" ]]
 then
-    echo "Warning: No profile is set, so you should have default AWS profile configured."
+    echo "INFO: No profile is set in config.conf, so using default profile."
     profile_cmd=""
 else
     profile_cmd="--profile"
 fi
 
-aws_instances="$output""aws_instances_$(date +"%Y-%m-%d_%H-%M")"; \
-aws "$profile_cmd" "$profile" \
+echo "Using region: $region"
+
+aws_instances="$output""aws_instances_"$region"_$(date +"%Y-%m-%d_%H-%M-%S")"; \
+aws $profile_cmd $profile \
     ec2 describe-instances \
     --region "$region" \
-    --query 'Reservations[].Instances[].[Tags[?Key==`Name`].Value,InstanceId,State.Name,PrivateIpAddress,PublicIpAddress,NetworkInterfaces[].Association[].IpOwnerId,InstanceType]' \
+    --query 'Reservations[].Instances[].[Tags[?Key==`Name`].Value,InstanceId,Tags[?Key==`Purpose`].Value,State.Name,PrivateIpAddress,PublicIpAddress,NetworkInterfaces[].Association[].IpOwnerId,InstanceType]' \
     --output json \
     > "$aws_instances".json && \
 jq -r '[.[][] | if . == null or . == [] then "-" else . end | .[]? // . ] | @csv' "$aws_instances".json > "$aws_instances".csv && \
-sed -i "s/,/\n/7; P; D" "$aws_instances".csv && \
-sed -i '1s/^/"Name (tag)","InstanceId","State","PrivateIpAddress","PublicIpAddress","IpOwnerId","InstanceType"\n/' "$aws_instances".csv
+sed -i "s/,/\n/8; P; D" "$aws_instances".csv && \
+sed -i '1s/^/"Name (tag)","InstanceId","Purpose (tag)","State","PrivateIpAddress","PublicIpAddress","IpOwnerId","InstanceType"\n/' "$aws_instances".csv
 
 
 # Explanations of the script lines

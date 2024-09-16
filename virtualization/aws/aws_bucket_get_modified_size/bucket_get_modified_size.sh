@@ -181,6 +181,7 @@ echo "\"Bucket\",\"Last edited file\",\"Last edit\",\"Size of last edited file\"
 for bucket in "${arr_buckets[@]}"
 do
     echo "Checking bucket: $bucket"
+    #echo "$bucket" >> buckets_modified
     modified=$(aws "$aws_profile_cmd" "$aws_profile" s3api list-objects-v2 \
         --bucket "$bucket" \
         | jq -r '.[] | max_by(.LastModified) | [.Key, .LastModified, .Size]|@csv')
@@ -198,4 +199,10 @@ do
         | awk 'BEGIN {total=0}{total+=$3}END{print total/1024/1024" MB"}')
 
     echo "\"$bucket\","$modified,"\"$bucket_size\"" >> $output_csv
+
+    # old stuff
+    #echo "\"$bucket\",""$modified" >> buckets_modified
+    #bucket_size=$(aws --profile PROFILENAME s3 ls s3://"$bucket" --recursive --human-readable --summarize)
+    #sleep 5
+    #aws --profile PROFILENAME s3 ls "$bucket" --recursive --output text | sort | tail -n 1 | awk '{print $1"T"$2","$3","$4}' >> buckets_modified
 done

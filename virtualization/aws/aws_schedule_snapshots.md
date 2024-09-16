@@ -47,7 +47,7 @@ aws dlm get-lifecycle-policy --policy-id policy-0bc26e7e6083a1111 --region eu-ce
         "Description": "weekly-tuesday-friday-snapshot",
         "State": "ENABLED",
         "StatusMessage": "ENABLED",
-        "ExecutionRoleArn": "arn:aws:iam::518797231111:role/service-role/AWSDataLifecycleManagerDefaultRole",
+        "ExecutionRoleArn": "arn:aws:iam::518797231111:role/service-role/AWSDataLifecycleManagertRole",
         "DateCreated": "2020-11-04T11:26:18.841000+01:00",
         "DateModified": "2020-11-04T13:31:39.157000+01:00",
         "PolicyDetails": {
@@ -102,7 +102,7 @@ aws dlm get-lifecycle-policy --policy-id policy-0bc26e7e6083a1111 --region eu-ce
 ~~~
 
 ## How to create snapshot policy via AWS CLI
-* One must create a Defaul role in IAM before the CLI will work.
+* One must create a Default role in IAM before the CLI will work.
   * IAM
     ~~~
     -> Create Role

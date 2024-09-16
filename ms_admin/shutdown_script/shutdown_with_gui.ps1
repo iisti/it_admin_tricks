@@ -27,9 +27,10 @@ function Get-TimeStamp
 ##################
 
 # "$shutdownInSecs" is defined in shutdown_config.ps1 file.
+$clockNow       = (Get-Date -Format HH:mm)
 $shutdownInMins = $shutdownInSecs / 60
 $title          = 'Shutdown'
-$question       = "This machine will shutdown in $shutdownInMins minutes. Do you want to proceed?"
+$question       = "Clock is now $clockNow. This machine will shutdown in $shutdownInMins minutes. Do you want to proceed?"
 
 ##################
 ### SCRIPT MAIN

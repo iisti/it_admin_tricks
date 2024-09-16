@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd
+  labels:
+    app: httpd
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      name: http
+  selector:
+    app: httpd
+    tier: frontend
+  type: ClusterIP
+---
+apiVersion: v1
+automountServiceAccountToken: true
+kind: ServiceAccount
+metadata:
+  name: httpd
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-git-ssh
+#type: Opaque
+stringData:
+  ssh: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    # put ssh key
+    -----END OPENSSH PRIVATE KEY-----
+  # Check with "ssh-keyscan github.com" 
+  known_hosts: "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd
+  labels:
+    app: httpd
+    tier: frontend
+spec:
+  selector:
+    matchLabels:
+      app: httpd
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: httpd
+        tier: frontend
+    spec:
+      serviceAccountName: httpd
+      securityContext:
+        fsGroup: 65533
+      initContainers:
+      - image: registry.k8s.io/git-sync/git-sync:v4.2.4
+        name: git-sync
+        #command: ["/bin/bash", "-c", "ls -la /etc/git-secret && cat /etc/git-secret/ssh"]
+        volumeMounts:
+          - name: httpd-persistent-storage
+            mountPath: /temp-repo
+          - name: secret-git-ssh-vol
+            mountPath: /etc/git-secret
+            readOnly: true
+        env:
+          - name: GITSYNC_REPO
+            #value: "https://github.com/traefik/whoami.git"
+            value: "git@github.com:iisti/some-private-repo.git"
+          - name: GITSYNC_SSH
+            value: "true"
+          - name: GITSYNC_ROOT
+            value: /temp-repo/root
+          - name: GITSYNC_ONE_TIME
+            value: "true"
+      containers:
+      - image: httpd:latest
+        name: httpd
+        # Commands could include some magic how to serve files from the Git repo.
+        command: [ "/bin/bash", "-c", "httpd-foreground" ]
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          limits:
+            cpu: 250m
+            memory: 64Mi
+          requests:
+            cpu: 1m
+            memory: 32Mi
+        volumeMounts:
+          - name: httpd-persistent-storage
+            mountPath: /temp-repo
+      volumes:
+        - name: httpd-persistent-storage
+          persistentVolumeClaim:
+            claimName: httpd-pv-claim
+        - name: secret-git-ssh-vol
+          secret:
+            secretName: secret-git-ssh
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: httpd-pv-claim
+  labels:
+    app: httpd
+spec:
+  storageClassName: ebs-sc-gp3
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app.kubernetes.io/name: httpd-ingress
+    app.kubernetes.io/part-of: httpd
+  name: httpd-ingress
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: httpd-test.example-domain.com
+      http: &backend
+        paths:
+          - backend:
+              service:
+                name: httpd
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+    - host: another-subdomain.example-domain.com
+      http: *backend
+---

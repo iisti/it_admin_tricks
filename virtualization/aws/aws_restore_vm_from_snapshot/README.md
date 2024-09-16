@@ -22,6 +22,7 @@
     aws_secret_access_key = SECRETACCESSKEY
     ~~~
 1. Create configuration file from **config_exmpale.conf** to run with your setup.
+1. Add tag `restore-vm-from-snapshot:true` into the VM that should be restored.
 1. Run the script with command
     ~~~
     ./aws_restore_win_vm_from_snapshot.sh config_vm007.conf

@@ -97,6 +97,24 @@
     aws s3 sync .\ s3://vm-backups-01/
     ~~~
 
-* More instructions
-  * https://docs.aws.amazon.com/cli/latest/reference/s3/cp.html
-  * https://docs.aws.amazon.com/cli/latest/reference/s3/sync.html
+# Sync via crontab
+1. Create log folder
+    ~~~
+    sudo mkdir /var/log/awscli
+    ~~~
+1. Create log rotate configuation file `/etc/logrotate.d/awsclilog`
+    * https://linux.die.net/man/8/logrotate
+    ~~~
+    /var/log/awscli/*.log {
+        rotate 10
+        size=5k
+        copytruncate
+        compress
+        missingok
+        notifempty
+    }
+    ~~~
+1. `sudo vim /etc/crontab`, sync 20 minutes pas every hour.
+    ~~~
+    20 * * * * root aws s3 sync /opt/storage/files s3://<bucket_name>/files --debug 2> /var/log/awscli/sync.log
+    ~~~

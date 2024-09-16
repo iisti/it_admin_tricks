@@ -1,0 +1,195 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd
+  labels:
+    app: httpd
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      name: http
+  selector:
+    app: httpd
+    tier: frontend
+  type: ClusterIP
+---
+apiVersion: v1
+automountServiceAccountToken: true
+kind: ServiceAccount
+metadata:
+  name: httpd
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: httpd-config-map
+data:
+  configure-httpd.sh: |
+    #!/bin/bash
+    apt-get update && apt-get install libapache2-mod-auth-openidc -y
+    mkdir -p /usr/local/apache2/conf/sites
+    cp /temp-confs/httpd-oauth2-test.example.com.conf /usr/local/apache2/conf/sites
+    echo 'Include conf/sites/*.conf' >> /usr/local/apache2/conf/httpd.conf
+    sed -i 's/^#LoadModule proxy_module modules\/mod_proxy.so/LoadModule proxy_module modules\/mod_proxy.so/g' /usr/local/apache2/conf/httpd.conf
+    sed -i 's/^#LoadModule proxy_http_module modules\/mod_proxy_http.so/LoadModule proxy_http_module modules\/mod_proxy_http.so/g' /usr/local/apache2/conf/httpd.conf
+    sed -i 's/^#LoadModule expires_module modules\/mod_expires.so/LoadModule expires_module modules\/mod_expires.so/g' /usr/local/apache2/conf/httpd.conf
+
+    # Logged out page
+    mkdir /usr/local/apache2/htdocs/loggedout
+    cat <<EOL >> /usr/local/apache2/htdocs/loggedout/index.html
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Logged out</title>
+      </head>
+      <body>
+        <h1>Logged out</h1>
+      </body>
+    </html>
+    EOL
+    chown -R www-data:www-data /usr/local/apache2/htdocs/loggedout
+    
+    # Logout page
+    mkdir /usr/local/apache2/htdocs/logout
+    cat <<EOL >> /usr/local/apache2/htdocs/logout/index.html
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Log out</title>
+      </head>
+      <body>
+        <a href="https://httpd-oauth2-test.example.com/redirect_uri?logout=https%3A%2F%2Fhttpd-oauth2-test.example.com%2Floggedout">Logout httpd-oauth2-test.example.com</a>
+      </body>
+    </html>
+    EOL
+    chown -R www-data:www-data /usr/local/apache2/htdocs/loggedout
+  httpd-oauth2-test.example.com.conf: |
+    <VirtualHost *:80>
+      ServerAdmin support@example.com
+      ServerName httpd-oauth2-test.example.com
+      DocumentRoot /usr/local/apache2/htdocs
+
+      # Notice keyword "early", otherwise the RequestHeaders are not set properly and OIDC doesn't know they exist.
+      RequestHeader set X-Forwarded-For "https://httpd-oauth2-test.example.com:443" early
+      RequestHeader set X-Forwarded-Proto "https" early
+      RequestHeader set X-Forwarded-Port "443" early
+
+      LoadModule auth_openidc_module /usr/lib/apache2/modules/mod_auth_openidc.so
+
+      # Revere proxy
+      # https://github.com/OpenIDC/mod_auth_openidc/wiki#8-how-do-i-run-mod_auth_openidc-behind-a-reverse-proxy
+      OIDCXForwardedHeaders X-Forwarded-Host X-Forwarded-Proto X-Forwarded-Port
+
+      OIDCProviderMetadataURL https://accounts.google.com/.well-known/openid-configuration
+      OIDCClientID 1234asdf.apps.googleusercontent.com
+      OIDCClientSecret <secret>
+
+      OIDCRedirectURI https://httpd-oauth2-test.example.com/redirect_uri
+      OIDCCryptoPassphrase <some_random_string>
+
+      # Keep sessions alive for 8 hours
+      OIDCSessionInactivityTimeout 28800
+      OIDCSessionMaxDuration 28800
+      OIDCStateMaxNumberOfCookies 5 true
+
+      # Expire cache in 8 hours
+      ExpiresActive On
+      ExpiresDefault "access plus 8 hours"
+
+      OIDCScope "openid email profile"
+
+      # Match everything else expect loggedout
+      <LocationMatch "^/(?!loggedout)">
+        AuthType openid-connect
+        <RequireAll>
+          Require valid-user
+          Require claim "hd:example.com"
+        </RequireAll>
+      </LocationMatch>
+
+      <Location "/redirect_uri">
+        Alias "/usr/local/apache2/htdocs"
+      </Location>
+
+      # Log out with URL https://httpd-oauth2-test.example.com/redirect_uri?logout=https%3A%2F%2Fhttpd-oauth2-test.example.com%2Floggedout
+      Alias "/loggedout" "/usr/local/apache2/htdocs/loggedout"
+      <Directory "/usr/local/apache2/htdocs/loggedout">
+      </Directory>
+
+      ProxyPass           / http://some-service:3000/
+      ProxyPassReverse    / http://some-service:3000/
+    </VirtualHost>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd
+  labels:
+    app: httpd
+    tier: frontend
+spec:
+  selector:
+    matchLabels:
+      app: httpd
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: httpd
+        tier: frontend
+    spec:
+      serviceAccountName: httpd
+      containers:
+      - image: httpd:latest
+        name: httpd
+        command: [ "/bin/bash", "-c", "/temp-confs/configure-httpd.sh && httpd-foreground" ]
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          limits:
+            cpu: 250m
+            memory: 128Mi # Needs memory for installing OIDC
+          requests:
+            cpu: 1m
+            memory: 32Mi
+        volumeMounts:
+          - name: httpd-config-mount
+            mountPath: /temp-confs
+      volumes:
+        - name: httpd-config-mount
+          configMap:
+            name: httpd-config-map
+            items:
+            - key: "httpd-oauth2-test.example.com.conf"
+              path: "httpd-oauth2-test.example.com.conf"
+            - key: "configure-httpd.sh"
+              path: "configure-httpd.sh"
+              mode: 0755         
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app.kubernetes.io/name: httpd-ingress
+    app.kubernetes.io/part-of: httpd
+  name: httpd-ingress
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: httpd-oauth2-test.example.com
+      http: &backend
+        paths:
+          - backend:
+              service:
+                name: httpd
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+    - #host: someotherdomain.example-domain.com
+      #http: *backend
+---

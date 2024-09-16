@@ -8,7 +8,7 @@
 4. Triggers tab
     * This configuration runs every 2 hours
       ~~~
-      Begin the task:       On a schedule
+      Begin the task:       On a schedule or At system startup (with delay)
       One time:             Put a date that is in the past.
       Repeat task every:    2 hours
         for a duration of:  Indefinitely
@@ -25,7 +25,7 @@
 1. Settings tab
     * Checked (these were defaults)
     ~~~
-    Allow task to bew run on demand
+    Allow task to be run on demand
     Stop the task if it runs longer than 3 days
     If the running task does not end when requrested, force it to stop
     ~~~

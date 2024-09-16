@@ -1,13 +1,15 @@
 # How to enable LDAPS connection into Windows server
 
 ## Testing LDAPS with ldp.exe
+
 * Open Windows search and search for ldp.exe
     * Connect
       * Server: ldaps04.mydomain.com
       * Port: 636
       * SSL: Checked
       * Successful connection:
-      ~~~
+
+      ~~~sh
       ld = ldap_sslinit("ldaps04.mydomain.com", 636, 1);
       Error 0 = ldap_set_option(hLdap, LDAP_OPT_PROTOCOL_VERSION, 3);
       Error 0 = ldap_connect(hLdap, NULL);
@@ -40,6 +42,7 @@
       supportedLDAPVersion (2): 3; 2; 
       supportedSASLMechanisms (4): GSSAPI; GSS-SPNEGO; EXTERNAL; DIGEST-MD5;
       ~~~
+
       * Failed test with a machine that doesn't have the necessary Root CA installed.
          * This error can also pop up if the server name is not configured correctly in alternative DNS names.
       ~~~

@@ -1,0 +1,140 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd
+  labels:
+    app: httpd
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      name: http
+  selector:
+    app: httpd
+    tier: frontend
+  type: ClusterIP
+---
+apiVersion: v1
+automountServiceAccountToken: true
+kind: ServiceAccount
+metadata:
+  name: httpd
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: httpd-httpd-ldap-test-config-map
+data:
+  httpd-ldap-test.example-domain.com.conf: |
+    <VirtualHost *:80>
+      ServerAdmin example@example-domain.com
+      ServerName httpd-ldap-test.example-domain.com
+      DocumentRoot /usr/local/apache2/htdocs
+
+      <Location "/">
+          AuthType Basic
+          AuthName "Internal"
+          AuthBasicProvider ldap
+          AuthLDAPBindDN "CN=ldaptest,OU=Accounts,DC=domain,DC=com"
+          AuthLDAPBINDPassword <censored>
+          AuthLDAPURL "ldaps://ldap.example-domain.com:636/OU=Accounts,DC=domain,DC=com?sAMAccountName?sub?(objectClass=user)"
+          # Do not surround the group name with quotes, source:
+          # https://httpd.apache.org/docs/2.4/mod/mod_authnz_ldap.html
+          <RequireAny>
+              Require ldap-user "ldaptest"
+              Require ldap-group CN=SomeGroup,OU=Groups,OU=Accounts,DC=domain,DC=com
+          </RequireAny>
+      </Location>
+
+      ProxyPass           / http://some-service:3000/
+      ProxyPassReverse    / http://some-service:3000/
+    </VirtualHost>
+  root-ca-01.crt: |
+    Certificate:
+        Data:
+          # data
+    -----BEGIN CERTIFICATE-----
+    # cert
+    -----END CERTIFICATE-----
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd
+  labels:
+    app: httpd
+    tier: frontend
+spec:
+  selector:
+    matchLabels:
+      app: httpd
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: httpd
+        tier: frontend
+    spec:
+      serviceAccountName: httpd
+      containers:
+      - image: httpd:latest
+        name: httpd
+        # Set host record for ldap.example-domain.com. Copy CA cert. Enable proxy and ldap modules. Enable apache confs. Start httpd.
+        command: [ "/bin/bash", "-c", "echo '12.34.56.78 ldap.example-domain.com' >> /etc/hosts && \
+          cp /temp-confs/root-ca-01.crt /usr/local/share/ca-certificates/ && \
+          echo 'LDAPTrustedGlobalCert CA_BASE64 /usr/local/share/ca-certificates/root-ca-01.crt' >> /usr/local/apache2/conf/httpd.conf && \
+          cp /temp-confs/httpd-ldap-test.example-domain.com.conf /usr/local/apache2/conf/ && \
+          echo 'Include conf/httpd-ldap-test.example-domain.com.conf' >> /usr/local/apache2/conf/httpd.conf && \
+          sed -i 's/^#LoadModule proxy_module modules\\/mod_proxy.so/LoadModule proxy_module modules\\/mod_proxy.so/g' /usr/local/apache2/conf/httpd.conf && \
+          sed -i 's/^#LoadModule proxy_http_module modules\\/mod_proxy_http.so/LoadModule proxy_http_module modules\\/mod_proxy_http.so/g' /usr/local/apache2/conf/httpd.conf && \
+          sed -i 's/^#LoadModule authnz_ldap_module modules\\/mod_authnz_ldap.so/LoadModule authnz_ldap_module modules\\/mod_authnz_ldap.so/g' /usr/local/apache2/conf/httpd.conf && \
+          sed -i 's/^#LoadModule ldap_module modules\\/mod_ldap.so/LoadModule ldap_module modules\\/mod_ldap.so/g' /usr/local/apache2/conf/httpd.conf && \
+          httpd-foreground" ]
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          limits:
+            cpu: 250m
+            memory: 64Mi
+          requests:
+            cpu: 1m
+            memory: 32Mi
+        volumeMounts:
+          - name: httpd-ldap-test-config
+            mountPath: /temp-confs
+      volumes:
+        - name: httpd-ldap-test-config
+          configMap:
+            name: httpd-httpd-ldap-test-config-map
+            items:
+            - key: "httpd-ldap-test.example-domain.com.conf"
+              path: "httpd-ldap-test.example-domain.com.conf"
+            - key: "root-ca-01.crt"
+              path: "root-ca-01.crt"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app.kubernetes.io/name: httpd-ingress
+    app.kubernetes.io/part-of: httpd
+  name: httpd-ingress
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: httpd-ldap-test.example-domain.com
+      http: &backend
+        paths:
+          - backend:
+              service:
+                name: httpd
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+    - host: another-sub-domain.example-domain.com
+      http: *backend
+---
