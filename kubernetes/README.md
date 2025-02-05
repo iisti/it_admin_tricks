@@ -65,6 +65,111 @@ aws --profile k8s007 eks update-kubeconfig --name k8s007 --region eu-central-1
   Added new context arn:aws:eks:eu-central-1:123456789012:cluster/k8s007 to /home/iisti/.kube/config
   ~~~
 
+## Use different Kubeconfig files
+
+If one is constantly using different configuration files, one can easily set aliases for couple different files.
+
+  * This could be added into `~/.bashrc`, so the alias works even if shell is restarted.
+
+    ~~~sh
+    alias kaws="kubectl --kubeconfig ~/.kube/config_aws"
+    ~~~
+
+### Combine default k3s configurations
+
+By default k3s kubeconfig looks something like below.
+  
+  ~~~yaml
+  apiVersion: v1
+  clusters:
+  - cluster:
+      certificate-authority-data: <LONG_CENSORED_DATA_STING>
+      server: https://127.0.0.1:6443
+    name: default
+  contexts:
+  - context:
+      cluster: default
+      user: default
+    name: default
+  current-context: default
+  kind: Config
+  preferences: {}
+  users:
+  - name: default
+    user:
+      client-certificate-data: <LONG_CENSORED_DATA_STING>
+      client-key-data: <LONG_CENSORED_DATA_STING>
+  ~~~
+
+Combine multiple k3s configurations with these steps. These steps assume that k3s are deployed externally and have different cluster endpoints. If there would be three k3s configurations, they could be updated like this.
+
+Files:
+
+  ~~~sh
+    ~/.kube/config_k3s_01
+    ~/.kube/config_k3s_02
+    ~/.kube/config_k3s_03
+  ~~~
+    
+1. Update endpoints in each k3s file.
+
+    ~~~sh
+    # Set cluster endpoint IPs
+    k3s_ip_01=123.123.123.121
+    k3s_ip_02=123.123.123.122
+    k3s_ip_03=123.123.123.123
+  
+    # Update cluster endpoint IPs in kubeconfig files
+    sed -i "s/127.0.0.1/$k3s_ip_01/g" ~/.kube/config_k3s_01
+    sed -i "s/127.0.0.1/$k3s_ip_02/g" ~/.kube/config_k3s_02
+    sed -i "s/127.0.0.1/$k3s_ip_03/g" ~/.kube/config_k3s_03
+  
+    # Update default names
+    sed -i 's/default/k3s-01/g' ~/.kube/config_k3s_01
+    sed -i 's/default/k3s-02/g' ~/.kube/config_k3s_02
+    sed -i 's/default/k3s-03/g' ~/.kube/config_k3s_03
+    ~~~
+
+2. Export combination of kubeconfigs
+
+    ~~~sh
+    export KUBECONFIG=~/.kube/config_k3s_01:~/.kube/config_k3s_02:~/.kube/config_k3s_03
+    ~~~
+
+3. Merge all kubeconfig files
+
+    ~~~sh
+    kubectl config view --flatten > ~/.kube/all-in-one-kubeconfig.yaml
+    ~~~
+  
+    * One can combine all configs in a current folder if there are multiple files
+  
+        ~~~sh
+        export KUBECONFIG=~/.kube/config:$(find . -type f | tr '\n' ':')
+        ~~~
+
+4. Create default kubeconfig
+  
+    ~~~sh
+    cp ~/.kube/config ~/.kube/config.bak-$(date +"%Y-%m-%d_%H-%M_%S")
+    cp ~/.kube/all-in-one-kubeconfig.yaml ~/.kube/config
+    ~~~
+
+5. Check that all clusters are listed
+  
+    ~~~sh
+    kubectl config get-clusters
+    ~~~
+
+    * Output should be something like
+  
+        ~~~sh
+        NAME
+        k3s-01
+        k3s-02
+        k3s-03
+        ~~~
+
 ## Tricks and tips
 
 * Check kubelet config
@@ -79,6 +184,34 @@ aws --profile k8s007 eks update-kubeconfig --name k8s007 --region eu-central-1
   ~~~sh
   kubectl cp namespace/podname:/path/target.txt /local_path/target.txt
   ~~~
+
+## Logs: print pod logs with jq
+
+When piping pod logs into jq, there can be an error similar to `parse error: Invalid numeric literal at line 2, column 5`. One can bypass the error with grep.
+
+  ~~~sh
+  kubectl -n mynamespace logs master-76b4998796-zlbwj | tee >(grep -v "^{") | grep "^{" | jq .
+  ~~~
+
+  * Log output is like:
+
+    ~~~sh
+    {
+      "iso8601Utc": "2024-09-25T06:57:03.816+0000",
+      "level": "INFO",
+      "loggerName": "org.apache.catalina.startup.Catalina",
+      "message": "Server startup in [26516] milliseconds",
+      "ndc": "",
+      "module": "start"
+    }
+    ~~~
+
+One can select certain messages by keys. In the below example prints all entries except log level INFO.
+
+  ~~~sh
+  kubectl -n mynamespace logs master-76b4998796-zlbwj | tee >(grep -v "^{") | grep "^{" | jq '. | select(.level!="INFO")'
+  ~~~
+
 
 ## Memory usage
 
@@ -164,6 +297,63 @@ There are different POD capacity limits for different instance types, e.g. m6a.x
     Non-terminated Pods:          (58 in total)
     Capacity pods: 58
     ~~~
+
+## Add a single hostname to CoreDNS' Corefile
+
+Add a single hostname to CoreDNS' Corefile, so the Kubernetes resources can resolve the hostname.
+
+~~~sh
+kubectl -n kube-system get cm coredns -o yaml > coredns_backup_$(date +"%Y-%m-%d_%H-%M_%S").yaml
+kubectl -n kube-system edit cm coredns
+~~~
+
+Add line `111.111.222.222 host.example.com` into hosts block. After configuration restart CoreDNS pod. The below configuration file is from k3s installation. 
+
+~~~
+apiVersion: v1
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health
+        ready
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+          pods insecure
+          fallthrough in-addr.arpa ip6.arpa
+        }
+        hosts /etc/coredns/NodeHosts {
+          111.111.222.222 host.example.com # add this line
+          ttl 60
+          reload 15s
+          fallthrough
+        }
+        prometheus :9153
+        forward . /etc/resolv.conf
+        cache 30
+        loop
+        reload
+        loadbalance
+        import /etc/coredns/custom/*.override
+    }
+    import /etc/coredns/custom/*.server
+  NodeHosts: |
+    123.123.123.123 master-node
+kind: ConfigMap
+metadata:
+  annotations:
+    objectset.rio.cattle.io/applied: XXXX
+    objectset.rio.cattle.io/id: ""
+    objectset.rio.cattle.io/owner-gvk: k3s.cattle.io/v1, Kind=Addon
+    objectset.rio.cattle.io/owner-name: coredns
+    objectset.rio.cattle.io/owner-namespace: kube-system
+  creationTimestamp: "2024-10-22T11:39:28Z"
+  labels:
+    objectset.rio.cattle.io/hash: bce283298811743a0386ab510f2f67ef74240c57
+  name: coredns
+  namespace: kube-system
+  resourceVersion: "7965664"
+  uid: 5bbf0de9-de40-42a3-a27c-82b494a3526d
+~~~
 
 ## Check VictoriaMetrics
 

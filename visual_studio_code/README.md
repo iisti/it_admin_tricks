@@ -1,5 +1,11 @@
 # Visual Studio Code Instructions
 
+## Settings Sync
+
+*Settings Sync lets you share your Visual Studio Code configurations such as settings, keybindings, and installed extensions across your machines so you are always working with your favorite setup.*
+
+https://code.visualstudio.com/docs/editor/settings-sync
+
 ## Set Tab size of Markdown files
 
 File -> Preferences -> Configure User Snippets -> markdown.json

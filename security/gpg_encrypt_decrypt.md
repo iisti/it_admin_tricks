@@ -1,15 +1,82 @@
 # Encrypt and decrypt files with GnuGP
 
-# Create GPG encrypted TAR.GZ and upload to S3
+## Create, import, export GPG key
+
+~~~sh
+sudo apt-get install gpg
+
+gpg --gen-key
+~~~
+
+### Import public or private key
+
+~~~sh
+gpg --import public.key
+
+gpg --list-keys
+    gpg: checking the trustdb
+    gpg: marginals needed: 3  completes needed: 1  trust model: pgp
+    gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+    gpg: next trustdb check due at 2024-12-13
+    /home/admin/.gnupg/pubring.kbx
+    ------------------------------
+    pub   rsa3072 2022-12-14 [SC] [expires: 2024-12-13]
+          D80567DB13FE67B63822ECFBB27A56B3B848CFDE
+    uid           [ultimate] Admin <example@example.com>
+    sub   rsa3072 2022-12-14 [E] [expires: 2024-12-13]
+~~~
+
+### Export public key
+
+The exported file content will start with `-----BEGIN PGP PUBLIC KEY BLOCK-----`
+
+~~~sh
+gpg --armor --output mypubkey.gpg --export <E-mail>
+~~~
+
+Or use username:
+
+~~~sh
+gpg --armor --output mypubkey.gpg --export "User Name"
+~~~
+
+### Export private key
+
+The exported file content will start with `-----BEGIN PGP PRIVATE KEY BLOCK-----`
+
+~~~sh
+gpg --armor --output myprivate.gpg --export-secret-key "Admin"
+~~~
+
+### Encrypt a large file
+
+Add & in the end of command if you want to follow progress
+
+~~~sh
+encrypt="filename"; gpg --output encrypted/"$encrypt".gpg --encrypt --recipient "email@example.com" "$encrypt" &
+~~~
+
+Progress can be followed with commands below.
+
+* Source <https://unix.stackexchange.com/questions/288782/how-to-show-progress-with-gpg-for-large-files>
+
+    ~~~sh
+    gpg ... &
+    progress -mp $!
+    ~~~
+
+## Create GPG encrypted TAR.GZ and upload to S3
 
 * backup_list.txt
-    ~~~
+
+    ~~~sh
     /path/to/dir
     /path/to/file
     ~~~
 
 * Script for creating GPG encrypted tar.gz and uploading it into S3
-    ~~~
+
+    ~~~sh
     #!/bin/bash
     
     if [ -z "$1" ]
@@ -94,8 +161,9 @@
     func_mv_to_s3
     ~~~
 
-# Decrypt tar.gz.gpg
-~~~
+## Decrypt tar.gz.gpg
+
+~~~sh
 gpg_priv_key="/home/admin/.gnupg/gpg_private.key"
 package="encypted_package"
 

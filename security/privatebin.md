@@ -55,42 +55,53 @@
   ~~~
 
 ## Configuration on CentOS 8
-    * PHP 7.4 wasn't enabled by default, for some reason 7.2 didn't work properly
-        ~~~
-        # Check newest php
-        yum module list php
-        yum module enable php:7.4
-        yum install php
-        ~~~
-    * One needed to start and enable php-fpm service after installation
-        ~~~
-        systemctl start php-fpm
-        systemctl enable php-fpm
-        ~~~
-      * Otherwise there will be error in httpd logs
-          ~~~ 
-          [Thu May 27 12:57:27.993607 2021] [proxy:error] [pid 560232:tid 139909071324928] (2)No such file or directory: AH02454: FCGI: attempt to connect to Unix domain socket /run/php-fpm/www.sock (*) failed
-          [Thu May 27 12:57:27.993706 2021] [proxy_fcgi:error] [pid 560232:tid 139909071324928] [client IP:49672] AH01079: failed to make connection to backend: httpd-UDS
-          pbin-error-https.log (END)
-          ~~~
-    * PHP versions on CentOS 8
-        ~~~
-        php --version
-            PHP 7.2.24 (cli) (built: Oct 22 2019 08:28:36) ( NTS )
-            Copyright (c) 1997-2018 The PHP Group
-            Zend Engine v3.2.0, Copyright (c) 1998-2018 Zend Technologies
 
-        php-fpm --version
-            PHP 7.2.24 (fpm-fcgi) (built: Oct 22 2019 08:28:36)
-            Copyright (c) 1997-2018 The PHP Group
-            Zend Engine v3.2.0, Copyright (c) 1998-2018 Zend Technologies
-        ~~~
-    * SELinux might need set context's correctly
-      * Not completely sure about this...
+* PHP 7.4 wasn't enabled by default, for some reason 7.2 didn't work properly
+
+    ~~~
+    # Check newest php
+    yum module list php
+    yum module enable php:7.4
+    yum install php
+    ~~~
+    
+* One needed to start and enable php-fpm service after installation
+
+    ~~~
+    systemctl start php-fpm
+    systemctl enable php-fpm
+    ~~~
+    
+  * Otherwise there will be error in httpd logs
+
+      ~~~ 
+      [Thu May 27 12:57:27.993607 2021] [proxy:error] [pid 560232:tid 139909071324928] (2)No such file or directory: AH02454: FCGI: attempt to connect to Unix domain socket /run/php-fpm/www.sock (*) failed
+      [Thu May 27 12:57:27.993706 2021] [proxy_fcgi:error] [pid 560232:tid 139909071324928] [client IP:49672] AH01079: failed to make connection to backend: httpd-UDS
+      pbin-error-https.log (END)
       ~~~
-      semanage fcontext -a -t httpd_sys_rw_content_t PrivateBin
-      restorecon -R -v PrivateBin
-      ~~~  
+
+* PHP versions on CentOS 8
+
+    ~~~
+    php --version
+        PHP 7.2.24 (cli) (built: Oct 22 2019 08:28:36) ( NTS )
+        Copyright (c) 1997-2018 The PHP Group
+        Zend Engine v3.2.0, Copyright (c) 1998-2018 Zend Technologies
+
+    php-fpm --version
+        PHP 7.2.24 (fpm-fcgi) (built: Oct 22 2019 08:28:36)
+        Copyright (c) 1997-2018 The PHP Group
+        Zend Engine v3.2.0, Copyright (c) 1998-2018 Zend Technologies
+    ~~~
+
+* SELinux might need set context's correctly
+  * Not completely sure about this...
+  
+  ~~~
+  semanage fcontext -a -t httpd_sys_rw_content_t PrivateBin
+  restorecon -R -v PrivateBin
+  ~~~
+
 * Additionally you need to configure either HTTPS on the server or HTTPS for proxying.
 
 * Configuration file for Apache reverse proxy
