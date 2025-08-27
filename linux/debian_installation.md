@@ -1,27 +1,86 @@
 # Basic installation/configuration of Debian server/desktop
 
-## Installation with VMware ESXi
+## Installation with ISO file
 
 1. Download ISO
-    * https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/
+    * <https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/>
     * Check shasum
 1. Mount the ISO image with VM.
 1. Use option *Install*
 1. Select whatever is needed for the disks.
 1. From Software selection select:
+    * If desktop is wante, `xfce` is light weight and works with xrdp.
     * SSH
     * standard system utilities
 
-## Install sudo and add user to sudoers group
+## Configure networking
+
+If networking was not set correctly during installation, one can configure with these instructions.
+
+### DNS servers
+
+This has been tested with Debian 13 Trixie.
 
 ~~~sh
-su -
-apt-get install sudo
-usermod -aG sudo username
-exit
+# Check network connection name. "Wired connection 1" is default.
+nmcli con
+
+# Set DNS server
+nmcli con mod "Wired connection 1" ipv4.dns "8.8.8.8 8.8.4.4"
+
+# Restart NetworkManager
+systemctl restart NetworkManager
 ~~~
 
-* Login/logout with the user username, so that current groups are updated.
+* If there are multiple connections, one could automate with script below, source <https://serverfault.com/a/1064938/323362>
+
+  ~~~sh
+  nmcli -g name,type connection  show  --active | awk -F: '/ethernet|wireless/ { print $1 }' | while read connection
+  do
+    nmcli con mod "$connection" ipv6.ignore-auto-dns yes
+    nmcli con mod "$connection" ipv4.ignore-auto-dns yes
+    nmcli con mod "$connection" ipv4.dns "8.8.8.8 8.8.4.4"
+    nmcli con down "$connection" && nmcli con up "$connection"
+  done
+  ~~~
+
+### Configure APT sources.list
+
+One needs to configure [sources.list](https://wiki.debian.org/SourcesList) manually if network was not working correctly during installation.
+
+Set in `/etc/apt/sources.list`
+
+~~~sh
+# deb cdrom:[Debian GNU/Linux 13.0.0 _Trixie_ - Official amd64 DVD Binary-1 with firmware 20250809-11:21]/ trixie contrib main non-free-firmware
+
+deb https://deb.debian.org/debian trixie main non-free-firmware
+deb-src https://deb.debian.org/debian trixie main non-free-firmware
+
+deb https://security.debian.org/debian-security trixie-security main non-free-firmware
+deb-src https://security.debian.org/debian-security trixie-security main non-free-firmware
+
+deb https://deb.debian.org/debian trixie-updates main non-free-firmware
+deb-src https://deb.debian.org/debian trixie-updates main non-free-firmware
+~~~
+
+## Install sudo and add user to sudoers group
+
+NOTICE: remember to change the `username` to correct user!
+
+1. As root
+
+   ~~~sh
+   apt-get install sudo
+   usermod -aG sudo username
+   ~~~
+
+1. If one wants to run sudo command without password prompt, one can add line below to /etc/sudoers
+
+   ~~~sh
+   username ALL=NOPASSWD: ALL
+   ~~~
+
+1. Login/logout with the user username, so that current groups are updated.
 
 ## Run script to install some basic software
 
@@ -56,7 +115,7 @@ sudo dpkg-reconfigure locales
 
 ## Show current folder instead of full path in shell
 
-* Source: https://superuser.com/a/60563/532911
+* Source: <https://superuser.com/a/60563/532911>
 * Change \w from lowercase to uppercase \W in ~/.bashrc file
 
     ~~~sh
@@ -65,7 +124,7 @@ sudo dpkg-reconfigure locales
                                                                                                 ^ This one
     ~~~
 
-    * Start new shell.
+  * Start new shell.
 
 * Adding the same for root user
 
@@ -93,7 +152,7 @@ PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[0
 * Shell will look something like:
 
     ${\textsf{\color{lightgreen}iisti@host\color{white}:\color{lightblue}repository-name \color{pink}(branch-name)\color{white}\\$}}$
-    
+
 ## Add additional user
 
 * This user uses SSH key as authentication. Argument `--disabled-password` can be left out if password is required.
@@ -114,7 +173,7 @@ PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[0
    chmod 700 /home/"$newuser"/.ssh
    touch /home/"$newuser"/.ssh/authorized_keys
    chmod 600 /home/"$newuser"/.ssh/authorized_keys
-   chown -R "$newuser". /home/"$newuser"/.ssh
+   chown -R "$newuser": /home/"$newuser"/.ssh
    sshkey_public="ssh-ed25519 xxxxyyyywwww user@email.com"
    echo "$sshkey_public" | sudo tee -a /home/"$newuser"/.ssh/authorized_keys
    
@@ -137,37 +196,39 @@ PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[0
 ## Add extra disk
 
 * This has been tested in AWS with Debian 10.
-    * Run as root or sudo
+  * Run as root or sudo
 
-        ~~~sh
-        lsblk
-        # ATTENTION! It's not necessary to make a partition, one can also just format the plain volume, mkfs.xfs /dev/nvme1n1
-        fdisk /dev/nvme1n1
-        # Choices: n, p, 1, default, default, w
-        lsblk
-        mkfs.xfs /dev/nvme1n1p1
-        # If error "-bash: mkfs.xfs: command not found"
-        apt-get install xfsprogs
-        mkfs.xfs /dev/nvme1n1p1
-        # Create mountpoint and mount
-        mkdir -p /opt/storage/disk02
-        mount /dev/nvme1n1p1 /opt/storage/disk02
+      ~~~sh
+      lsblk
+      # ATTENTION! It's not necessary to make a partition, one can also just format the plain volume, mkfs.xfs /dev/nvme1n1
+      fdisk /dev/nvme1n1
+      # Choices: n, p, 1, default, default, w
+      lsblk
+      mkfs.xfs /dev/nvme1n1p1
+      # If error "-bash: mkfs.xfs: command not found"
+      apt-get install xfsprogs
+      mkfs.xfs /dev/nvme1n1p1
+      # Create mountpoint and mount
+      mkdir -p /mnt/disk02
+      mount /dev/nvme1n1p1 /mnt/disk02
 
-        # Check disk UUID
-        blkid
-            /dev/nvme1n1p1: UUID="84f08de0-ba36-4e01-9c3b-d416d0547521" BLOCK_SIZE="512" TYPE="xfs" PARTUUID="e32b3c3a-01"
-        
-        # Add to /etc/fstab
-        
-        # Extra disk for backups, use UUID not device name! In some cases Linux can change the dev nams which messes up disk order.
-        # nofail = allow booting even if this device fails
-        # 0 = no dumping of filesystem
-        # 2 = non-root device
-        # /dev/nvme1n1p1
-        UUID=84f08de0-ba36-4e01-9c3b-d416d0547521 /opt/storage/disk02  xfs defaults 0 2
-        ~~~
+      # Check disk UUID
+      blkid
+          /dev/nvme1n1p1: UUID="84f08de0-ba36-4e01-9c3b-d416d0547521" BLOCK_SIZE="512" TYPE="xfs" PARTUUID="e32b3c3a-01"
+      
+      # Add to /etc/fstab
+      
+      # Extra disk for backups, use UUID not device name! In some cases Linux can change the dev nams which messes up disk order.
+      # nofail = allow booting even if this device fails
+      # 0 = no dumping of filesystem
+      # 2 = non-root device
+      # /dev/nvme1n1p1
+      UUID=84f08de0-ba36-4e01-9c3b-d416d0547521 /mnt/disk02  xfs defaults 0 2
+      ~~~
 
 ## Install XRDP for Remote Desktop Connection
+
+XRDP works at least with `xfce` desktop environment.
 
 * Install and configure
 
@@ -189,13 +250,16 @@ PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[0
    ufw allow 3389
    ~~~
 
-* Might need restarting the whole machine
 * Local user must be logged out, so that the RDP connection succeeds.
+
+## Install Firefox
+
+<https://support.mozilla.org/en-US/kb/install-firefox-linux>
 
 ## Install Google Drive
 
 * Tested on Debian 11 Desktop
-   * OcalmFuse worked properly, Gnome Online Account didn't.
+  * OcalmFuse worked properly, Gnome Online Account didn't.
 
       ~~~sh
       sudo apt-get install libfuse-dev libsqlite3-dev

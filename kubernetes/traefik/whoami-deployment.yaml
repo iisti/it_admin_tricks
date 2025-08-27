@@ -1,0 +1,113 @@
+---
+# whoami.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whoami
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: whoami
+  template:
+    metadata:
+      labels:
+        app: whoami
+    spec:
+      containers:
+        - name: whoami
+          image: traefik/whoami
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: 250m
+              memory: 64Mi
+            requests:
+              cpu: 1m
+              memory: 32Mi
+---
+# whoami-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: whoami
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: whoami
+  type: ClusterIP
+---
+# START BASIC AUTH
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: basic-auth-middleware
+spec:
+  basicAuth:
+    removeHeader: true
+    secret: basic-auth
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: basic-auth
+data:
+  # Create credentials: 'htpasswd -nb user password | openssl base64'
+  users: dXNlcjokYXByMSQxR3kzSWZYRiROaUJTang0alhEYi5WY1A3elZqMHYuCgo=
+---
+# END BASIC AUTH
+# START IP WHITE LIST
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: ipallowlist
+spec:
+  ipAllowList:
+    # The strategy is required.
+    ipStrategy:
+      depth: 1
+    sourceRange:
+      - 123.123.123.123/32
+---
+# END IP WHITE LIST
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app.kubernetes.io/name: whoami-ing
+    app.kubernetes.io/part-of: whoami
+  name: whoami-ing
+  # For basic auth and ipallowlist
+  annotations:
+    # SYNTAX
+    # whoami-dev comes from namespace name
+    # basic-auth-middleware comes from middleware name
+    #
+    # Annotation for using both basic-auth and ipallowlist
+    #traefik.ingress.kubernetes.io/router.middlewares: whoami-dev-basic-auth-middleware@kubernetescrd,whoami-dev-ipallowlist@kubernetescrd
+    # Annotation for using ipallowlist
+    traefik.ingress.kubernetes.io/router.middlewares: whoami-dev-ipallowlist@kubernetescrd
+    # Annotation for using basic-auth
+    #traefik.ingress.kubernetes.io/router.middlewares: whoami-dev-basic-auth-middleware@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: whoami.example.com
+      http: &backend
+        paths:
+          - backend:
+              service:
+                name: whoami
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+    # Other DNS names
+    #- host: example.com
+    #  http: *backend
+---

@@ -1,0 +1,32 @@
+records:
+#  "example.zone":              # Domain zone
+#    # This record would be: sub-domain.example.zone
+#    - name: "sub-domain"
+#      value: "123.123.123.123" # no default
+#      type:  "A"               # no default
+#      ttl:   300               # 3600 is default
+  "VAR_TLD_DOMAIN_NAME":
+    - name: "VAR_VM_NAME_MASTER.VAR_SUB_DOMAIN_NAME"
+      value: "VAR_MASTER_PUBLIC_IP"
+      type:  "A"
+      ttl:   60
+    - name: "VAR_LB_NAME.VAR_SUB_DOMAIN_NAME"
+      value: "VAR_LB_PUBLIC_IP"
+      type:  "A"
+      ttl:   60
+    - name: "argocd.VAR_SUB_DOMAIN_NAME"
+      value: "VAR_LB_NAME.VAR_SUB_DOMAIN_NAME"
+      type:  "CNAME"
+      ttl:   60
+    - name: "pbin.VAR_SUB_DOMAIN_NAME"
+      value: "VAR_LB_NAME.VAR_SUB_DOMAIN_NAME"
+      type:  "CNAME"
+      ttl:   60
+    - name: "prometheus.VAR_SUB_DOMAIN_NAME"
+      value: "VAR_LB_NAME.VAR_SUB_DOMAIN_NAME"
+      type:  "CNAME"
+      ttl:   60
+    - name: "grafana.VAR_SUB_DOMAIN_NAME"
+      value: "VAR_LB_NAME.VAR_SUB_DOMAIN_NAME"
+      type:  "CNAME"
+      ttl:   60

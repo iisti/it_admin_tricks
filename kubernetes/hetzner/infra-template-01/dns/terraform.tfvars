@@ -1,0 +1,1 @@
+api_token = "VAR_DNS_API_TOKEN"

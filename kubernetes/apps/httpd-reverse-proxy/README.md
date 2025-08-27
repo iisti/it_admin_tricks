@@ -2,6 +2,8 @@
 
 ## httpd reverse proxy with LDAPS Authentication
 
+**NOTICE**: Traefik was used as an ingress controller.
+
 1. Change the properties in the yaml to fit your use case.
 1. Deploy the [httpd-reverse-proxy-with-ldaps.yaml](httpd-reverse-proxy-with-ldaps.yaml) manifest with command below.
 
@@ -12,6 +14,8 @@
 1. One can test ldap with [ldap.md](../../linux/ldap.md)
 
 ## httpd reverse proxy with Oauth 2.0 Authentication
+
+**NOTICE**: Traefik was used as an ingress controller.
 
 1. Change the properties in the yaml to fit your use case.
 1. Deploy the [httpd-reverse-proxy-with-oauth2.yaml](httpd-reverse-proxy-with-oauth2.yaml) manifest with command below.

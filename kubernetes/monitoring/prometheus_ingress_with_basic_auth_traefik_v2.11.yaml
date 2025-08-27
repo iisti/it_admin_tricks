@@ -1,0 +1,49 @@
+# START BASIC AUTH
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: basic-auth-middleware
+spec:
+  basicAuth:
+    removeHeader: true
+    secret: basic-auth
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: basic-auth
+data:
+  # Create credentials: 'htpasswd -nb user password | openssl base64'
+  # Example credentials: prometheus / prometheus
+  users: cHJvbWV0aGV1czokYXByMSR2RFkudHZreSRNSlh3Rk1GYVVMMXBtTWcxdGFXRTIwCgo=
+---
+# END BASIC AUTH
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app.kubernetes.io/name: prometheus-ingress
+    app.kubernetes.io/part-of: prometheus
+  name: prometheus-ingress
+  # For basic auth
+  annotations:
+    # The syntax of default-basic-auth-middleware is following:
+    # default = namespace
+    # basic-auth-middleware = middleware name
+    traefik.ingress.kubernetes.io/router.middlewares: monitoring-basic-auth-middleware@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: prometheus.example.com
+      http: &backend
+        paths:
+          - backend:
+              service:
+                name: prometheus-server
+                port:
+                  #name: http
+                  number: 80
+            path: /
+            pathType: Prefix

@@ -1,0 +1,16 @@
+#cloud-config
+packages:
+  - curl
+  - ncdu # For checking disk usage
+users:
+  - name: cluster
+    ssh-authorized-keys:
+      - "${ssh_key_pub_admin}"
+      - "${ssh_key_pub_worker}"
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+runcmd:
+  - apt-get update -y
+  - curl https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik" sh -
+  - chown cluster:cluster /etc/rancher/k3s/k3s.yaml
+  - chown cluster:cluster /var/lib/rancher/k3s/server/node-token

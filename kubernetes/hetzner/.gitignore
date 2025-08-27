@@ -1,0 +1,5 @@
+# Test
+not-in-git/*
+
+# Ignore evironment
+*.tf-env

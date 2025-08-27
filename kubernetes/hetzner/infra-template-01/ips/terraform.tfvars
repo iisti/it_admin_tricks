@@ -1,0 +1,1 @@
+hcloud_token = "VAR_HCLOUD_TOKEN" # VAR_PROJECT

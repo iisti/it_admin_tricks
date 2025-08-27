@@ -1,0 +1,10 @@
+resources:
+  - argocd_ingress_traefik.yaml
+
+patches:
+  - path: set_hostname_argocd.yaml
+    target:
+      group: networking.k8s.io
+      version: v1
+      kind: Ingress
+      name: argocd-server-ingress

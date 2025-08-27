@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: 
+  name: pbin
+  namespace: argocd
+spec: 
+  destination: 
+    namespace: pbin
+    server: "https://kubernetes.default.svc"
+  project: default
+  source:
+    path: kubernetes/apps/privatebin
+    repoURL: "git@github.com:iisti/it_admin_tricks_private.git"
+    targetRevision: "main"
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

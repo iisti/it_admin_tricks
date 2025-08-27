@@ -69,7 +69,7 @@ aws --profile k8s007 eks update-kubeconfig --name k8s007 --region eu-central-1
 
 If one is constantly using different configuration files, one can easily set aliases for couple different files.
 
-  * This could be added into `~/.bashrc`, so the alias works even if shell is restarted.
+* This could be added into `~/.bashrc`, so the alias works even if shell is restarted.
 
     ~~~sh
     alias kaws="kubectl --kubeconfig ~/.kube/config_aws"
@@ -105,12 +105,12 @@ Combine multiple k3s configurations with these steps. These steps assume that k3
 
 Files:
 
-  ~~~sh
-    ~/.kube/config_k3s_01
-    ~/.kube/config_k3s_02
-    ~/.kube/config_k3s_03
-  ~~~
-    
+~~~sh
+~/.kube/config_k3s_01
+~/.kube/config_k3s_02
+~/.kube/config_k3s_03
+~~~
+
 1. Update endpoints in each k3s file.
 
     ~~~sh
@@ -193,7 +193,7 @@ When piping pod logs into jq, there can be an error similar to `parse error: Inv
   kubectl -n mynamespace logs master-76b4998796-zlbwj | tee >(grep -v "^{") | grep "^{" | jq .
   ~~~
 
-  * Log output is like:
+* Log output is like:
 
     ~~~sh
     {
@@ -211,7 +211,6 @@ One can select certain messages by keys. In the below example prints all entries
   ~~~sh
   kubectl -n mynamespace logs master-76b4998796-zlbwj | tee >(grep -v "^{") | grep "^{" | jq '. | select(.level!="INFO")'
   ~~~
-
 
 ## Memory usage
 
@@ -307,9 +306,9 @@ kubectl -n kube-system get cm coredns -o yaml > coredns_backup_$(date +"%Y-%m-%d
 kubectl -n kube-system edit cm coredns
 ~~~
 
-Add line `111.111.222.222 host.example.com` into hosts block. After configuration restart CoreDNS pod. The below configuration file is from k3s installation. 
+Add line `111.111.222.222 host.example.com` into hosts block. After configuration restart CoreDNS pod. The below configuration file is from k3s installation.
 
-~~~
+~~~yaml
 apiVersion: v1
 data:
   Corefile: |
@@ -417,4 +416,3 @@ kubectl run mysql-client --image=mysql:9.0.1 -it --rm --restart=Never -- /bin/ba
 If you don't see a command prompt, try pressing enter.
 bash-5.1#
 ~~~
-

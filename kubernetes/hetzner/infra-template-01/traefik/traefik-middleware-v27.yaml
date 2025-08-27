@@ -1,0 +1,33 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: stripprefix
+  namespace: traefik
+spec:
+  stripPrefix:
+    prefixes:
+      - /services
+      - /explorer
+      - /web-reader
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: replacepathregex
+  namespace: traefik
+spec:
+  replacePathRegex:
+    regex:  ^/services/(.*)
+    replacement: /$1
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: redirectregex
+  namespace: traefik
+spec:
+  redirectRegex:
+    regex: ^(https?://[^/]+/[a-z0-9_]+)$
+    replacement: ${1}/
